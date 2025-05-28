@@ -1,77 +1,81 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.example.Motor.PHapp;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author Mico
- */
 public class Employee {
-    private final String employeeName;
-    private final int employeeNumber;
-    private final String birthDate; // As specified, but LocalDate would be better in a real app
-    private final String position;
-    private final double hourlyRate;
+    private int employeeNumber;
+    private String lastName;
+    private String firstName;
+    private String birthDate;
+    private String address;
+    private String phoneNumber;
+    private String sssNumber;
+    private String philhealthNumber;
+    private String tinNumber;
+    private String pagibigNumber;
+    private String status;
+    private String position;
+    private String immediateSupervisor;
+    private double basicSalary;
+    private double riceSubsidy;
+    private double phoneAllowance;
+    private double clothingAllowance;
+    private double semiMonthlyRate;
+    private double hourlyRate;
+    private List<Attendance> attendanceRecords;
 
-    // Relationship: Employee has Attendance (Aggregation)
-    // Represents multiple attendance records for an employee
-    private final List<Attendance> attendanceRecords;
-
-    // Constructor
-    public Employee(String employeeName, int employeeNumber, String birthDate, String position, double hourlyRate) {
-        this.employeeName = employeeName;
+    public Employee(int employeeNumber, String lastName, String firstName, String birthDate, String address,
+                    String phoneNumber, String sssNumber, String philhealthNumber, String tinNumber,
+                    String pagibigNumber, String status, String position, String immediateSupervisor,
+                    double basicSalary, double riceSubsidy, double phoneAllowance, double clothingAllowance,
+                    double semiMonthlyRate, double hourlyRate) {
         this.employeeNumber = employeeNumber;
+        this.lastName = lastName;
+        this.firstName = firstName;
         this.birthDate = birthDate;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
+        this.sssNumber = sssNumber;
+        this.philhealthNumber = philhealthNumber;
+        this.tinNumber = tinNumber;
+        this.pagibigNumber = pagibigNumber;
+        this.status = status;
         this.position = position;
+        this.immediateSupervisor = immediateSupervisor;
+        this.basicSalary = basicSalary;
+        this.riceSubsidy = riceSubsidy;
+        this.phoneAllowance = phoneAllowance;
+        this.clothingAllowance = clothingAllowance;
+        this.semiMonthlyRate = semiMonthlyRate;
         this.hourlyRate = hourlyRate;
-        this.attendanceRecords = new ArrayList<>(); // Initialize the list
+        this.attendanceRecords = new ArrayList<>();
     }
 
-    // Method from the diagram
-    // '-' indicates private, but printing info is a common internal method
-    private String getEmployeeInfo() {
-    return "Employee Number: " + employeeNumber + "\n" +
-           "Name: " + employeeName + "\n" +
-           "Birth Date: " + birthDate + "\n" +
-           "Position: " + position + "\n" +
-           "Hourly Rate: " + hourlyRate;
-}
+    public int getEmployeeNumber() { return employeeNumber; }
+    public String getLastName() { return lastName; }
+    public String getFirstName() { return firstName; }
+    public String getBirthDate() { return birthDate; }
+    public String getAddress() { return address; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public String getSssNumber() { return sssNumber; }
+    public String getPhilhealthNumber() { return philhealthNumber; }
+    public String getTinNumber() { return tinNumber; }
+    public String getPagibigNumber() { return pagibigNumber; }
+    public String getStatus() { return status; }
+    public String getPosition() { return position; }
+    public String getImmediateSupervisor() { return immediateSupervisor; }
+    public double getBasicSalary() { return basicSalary; }
+    public double getRiceSubsidy() { return riceSubsidy; }
+    public double getPhoneAllowance() { return phoneAllowance; }
+    public double getClothingAllowance() { return clothingAllowance; }
+    public double getHourlyRate() { return hourlyRate; }
+    public List<Attendance> getAttendanceRecords() { return attendanceRecords; }
+    public String getEmployeeName() { return lastName + ", " + firstName; }
+    public void addAttendance(Attendance attendance) { attendanceRecords.add(attendance); }
 
-    // Method from the diagram
-    // '-' indicates private in diagram, but needed publicly for SalaryCalculator
-    public double getHourlyRate() {
-        return hourlyRate;
-    }
-
-    // Method to add attendance records (related to aggregation)
-    public void addAttendance(Attendance attendance) {
-        this.attendanceRecords.add(attendance);
-    }
-
-    // Method to get attendance records (useful for calculating total hours)
-    public List<Attendance> getAttendanceRecords() {
-        return attendanceRecords;
-    }
-
-    // Optional: Getters for other attributes if needed publicly
-    public String getEmployeeName() {
-        return employeeName;
-    }
-
-    public int getEmployeeNumber() {
-        return employeeNumber;
-    }
-
-    public String getBirthDate() {
-        return birthDate;
-    }
-
-    public String getPosition() {
-        return position;
+    @Override
+    public String toString() {
+        return employeeNumber + " - " + lastName + ", " + firstName;
     }
 }
