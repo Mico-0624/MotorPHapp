@@ -23,7 +23,6 @@ public class MotorPHGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Apply a professional Look and Feel (Nimbus)
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
             SwingUtilities.updateComponentTreeUI(this);
@@ -36,10 +35,8 @@ public class MotorPHGUI extends JFrame {
         salaryCalculator = new SalaryCalculator();
         isLoggedIn = false;
 
-        // Load employee data
         loadEmployeeData();
 
-        // Main panel with gradient background
         JPanel mainPanel = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -53,7 +50,6 @@ public class MotorPHGUI extends JFrame {
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         setContentPane(mainPanel);
 
-        // Tabbed pane with custom styling
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         tabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 12));
         tabbedPane.setBackground(new Color(240, 248, 255));
@@ -69,16 +65,6 @@ public class MotorPHGUI extends JFrame {
         for (int i = 1; i < tabbedPane.getTabCount(); i++) {
             tabbedPane.setEnabledAt(i, false);
         }
-    }
-
-    private void logout() {
-        isLoggedIn = false;
-        user = null;
-        for (int i = 1; i < tabbedPane.getTabCount(); i++) {
-            tabbedPane.setEnabledAt(i, false);
-        }
-        tabbedPane.setSelectedIndex(0);
-        JOptionPane.showMessageDialog(this, "Logged out successfully!", "Logout", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void loadEmployeeData() {
@@ -119,56 +105,72 @@ public class MotorPHGUI extends JFrame {
     }
 
     private void createLoginTab() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        panel.setBackground(new Color(240, 248, 255));
-
+        JPanel loginPanel = new JPanel(new GridBagLayout());
+        loginPanel.setBackground(new Color(240, 248, 255));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.CENTER;
 
-        JLabel titleLabel = new JLabel("Login");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        JLabel titleLabel = new JLabel("MotorPH Payroll System Login");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         titleLabel.setForeground(new Color(70, 130, 180));
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2; panel.add(titleLabel, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        loginPanel.add(titleLabel, gbc);
 
         JLabel usernameLabel = new JLabel("Username:");
         usernameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         JTextField usernameField = new JTextField(15);
+        usernameField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         JLabel passwordLabel = new JLabel("Password:");
         passwordLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         JPasswordField passwordField = new JPasswordField(15);
+        passwordField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         JButton loginButton = new JButton("Login");
         styleButton(loginButton);
-        JLabel statusLabel = new JLabel("");
-        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        JLabel loginStatusLabel = new JLabel("");
+        loginStatusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
-        gbc.gridwidth = 1; gbc.gridy = 1; panel.add(usernameLabel, gbc);
-        gbc.gridx = 1; panel.add(usernameField, gbc);
-        gbc.gridx = 0; gbc.gridy = 2; panel.add(passwordLabel, gbc);
-        gbc.gridx = 1; panel.add(passwordField, gbc);
-        gbc.gridx = 1; gbc.gridy = 3; panel.add(loginButton, gbc);
-        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2; panel.add(statusLabel, gbc);
+        gbc.gridwidth = 1;
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        loginPanel.add(usernameLabel, gbc);
+        gbc.gridx = 1;
+        loginPanel.add(usernameField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        loginPanel.add(passwordLabel, gbc);
+        gbc.gridx = 1;
+        loginPanel.add(passwordField, gbc);
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        loginPanel.add(loginButton, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        loginPanel.add(loginStatusLabel, gbc);
 
         loginButton.addActionListener(e -> {
             String username = usernameField.getText();
             String password = new String(passwordField.getPassword());
-            user = new User("admin", "password123");
-            if (user.verifyLogin(username, password)) {
+            user = new User(username, password);
+
+            if (user.isValid()) {
+                loginStatusLabel.setText("Login successful!");
+                loginStatusLabel.setForeground(Color.GREEN);
                 isLoggedIn = true;
-                statusLabel.setText("Login successful!");
-                statusLabel.setForeground(Color.GREEN);
                 for (int i = 1; i < tabbedPane.getTabCount(); i++) {
                     tabbedPane.setEnabledAt(i, true);
                 }
                 tabbedPane.setSelectedIndex(1);
             } else {
-                statusLabel.setText("Invalid credentials!");
-                statusLabel.setForeground(Color.RED);
+                loginStatusLabel.setText("Invalid username or password!");
+                loginStatusLabel.setForeground(Color.RED);
             }
         });
 
-        tabbedPane.addTab("Login", panel);
+        tabbedPane.addTab("Login", loginPanel);
     }
 
     private void createEmployeeTab() {
@@ -176,7 +178,6 @@ public class MotorPHGUI extends JFrame {
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
         panel.setBackground(new Color(240, 248, 255));
 
-        // Table for listing employees
         String[] columns = {"Employee #", "Last Name", "First Name", "Position", "Basic Salary"};
         DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -196,7 +197,6 @@ public class MotorPHGUI extends JFrame {
             tableModel.addRow(new Object[]{emp.getEmployeeNumber(), emp.getLastName(), emp.getFirstName(), emp.getPosition(), emp.getBasicSalary()});
         }
 
-        // Panel for selecting and viewing employee profile
         JPanel profilePanel = new JPanel(new BorderLayout());
         profilePanel.setBorder(BorderFactory.createTitledBorder(null, "Employee Profile", 0, 0, new Font("Segoe UI", Font.BOLD, 14), new Color(70, 130, 180)));
         profilePanel.setBackground(new Color(240, 248, 255));
@@ -222,33 +222,53 @@ public class MotorPHGUI extends JFrame {
         employeeSelector.addActionListener(e -> {
             Employee selectedEmployee = (Employee) employeeSelector.getSelectedItem();
             if (selectedEmployee != null) {
-                StringBuilder profile = new StringBuilder();
-                profile.append("Employee Number: ").append(selectedEmployee.getEmployeeNumber()).append("\n");
-                profile.append("Last Name: ").append(selectedEmployee.getLastName()).append("\n");
-                profile.append("First Name: ").append(selectedEmployee.getFirstName()).append("\n");
-                profile.append("Birth Date: ").append(selectedEmployee.getBirthDate()).append("\n");
-                profile.append("Address: ").append(selectedEmployee.getAddress()).append("\n");
-                profile.append("Phone Number: ").append(selectedEmployee.getPhoneNumber()).append("\n");
-                profile.append("SSS Number: ").append(selectedEmployee.getSssNumber()).append("\n");
-                profile.append("PhilHealth Number: ").append(selectedEmployee.getPhilhealthNumber()).append("\n");
-                profile.append("TIN Number: ").append(selectedEmployee.getTinNumber()).append("\n");
-                profile.append("Pag-IBIG Number: ").append(selectedEmployee.getPagibigNumber()).append("\n");
-                profile.append("Status: ").append(selectedEmployee.getStatus()).append("\n");
-                profile.append("Position: ").append(selectedEmployee.getPosition()).append("\n");
-                profile.append("Immediate Supervisor: ").append(selectedEmployee.getImmediateSupervisor()).append("\n");
-                profile.append("Basic Salary: ").append(String.format("%,.2f", selectedEmployee.getBasicSalary())).append("\n");
-                profile.append("Rice Subsidy: ").append(String.format("%,.2f", selectedEmployee.getRiceSubsidy())).append("\n");
-                profile.append("Phone Allowance: ").append(String.format("%,.2f", selectedEmployee.getPhoneAllowance())).append("\n");
-                profile.append("Clothing Allowance: ").append(String.format("%,.2f", selectedEmployee.getClothingAllowance())).append("\n");
-                profile.append("Hourly Rate: ").append(String.format("%,.2f", selectedEmployee.getHourlyRate())).append("\n");
-                profileArea.setText(profile.toString());
+                profileArea.setText(getEmployeeProfile(selectedEmployee));
             }
         });
 
         profilePanel.add(selectorPanel, BorderLayout.NORTH);
         profilePanel.add(profileScrollPane, BorderLayout.CENTER);
 
-        // Use split pane with custom divider
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(new Color(240, 248, 255));
+        JButton updateButton = new JButton("Update Employee");
+        JButton deleteButton = new JButton("Delete Employee");
+        styleButton(updateButton);
+        styleButton(deleteButton);
+        buttonPanel.add(updateButton);
+        buttonPanel.add(deleteButton);
+
+        updateButton.addActionListener(e -> {
+            Employee selectedEmployee = (Employee) employeeSelector.getSelectedItem();
+            if (selectedEmployee != null) {
+                showEditEmployeeDialog(selectedEmployee);
+                int selectedRow = employeeTable.getSelectedRow();
+                if (selectedRow != -1) {
+                    tableModel.setValueAt(selectedEmployee.getEmployeeNumber(), selectedRow, 0);
+                    tableModel.setValueAt(selectedEmployee.getLastName(), selectedRow, 1);
+                    tableModel.setValueAt(selectedEmployee.getFirstName(), selectedRow, 2);
+                    tableModel.setValueAt(selectedEmployee.getPosition(), selectedRow, 3);
+                    tableModel.setValueAt(selectedEmployee.getBasicSalary(), selectedRow, 4);
+                }
+                profileArea.setText(getEmployeeProfile(selectedEmployee));
+            }
+        });
+
+        deleteButton.addActionListener(e -> {
+            Employee selectedEmployee = (Employee) employeeSelector.getSelectedItem();
+            if (selectedEmployee != null) {
+                int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + selectedEmployee.getEmployeeName() + "?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    employees.remove(selectedEmployee);
+                    tableModel.removeRow(employeeTable.getSelectedRow());
+                    employeeSelector.removeItem(selectedEmployee);
+                    profileArea.setText("");
+                }
+            }
+        });
+
+        profilePanel.add(buttonPanel, BorderLayout.SOUTH);
+
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tableScrollPane, profilePanel);
         splitPane.setDividerLocation(400);
         splitPane.setDividerSize(10);
@@ -276,7 +296,10 @@ public class MotorPHGUI extends JFrame {
         JLabel titleLabel = new JLabel("Attendance Management");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         titleLabel.setForeground(new Color(70, 130, 180));
-        gbc.gridwidth = 2; gbc.gridy = 0; inputPanel.add(titleLabel, gbc);
+        gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        inputPanel.add(titleLabel, gbc);
 
         JLabel employeeLabel = new JLabel("Select Employee:");
         employeeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -303,17 +326,36 @@ public class MotorPHGUI extends JFrame {
         JLabel statusLabel = new JLabel("");
         statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
-        gbc.gridwidth = 1; gbc.gridy = 1; panel.add(inputPanel, BorderLayout.NORTH);
-        gbc.gridx = 0; gbc.gridy = 2; inputPanel.add(employeeLabel, gbc);
-        gbc.gridx = 1; inputPanel.add(attendanceEmployeeSelector, gbc);
-        gbc.gridx = 0; gbc.gridy = 3; inputPanel.add(dateLabel, gbc);
-        gbc.gridx = 1; inputPanel.add(dateField, gbc);
-        gbc.gridx = 0; gbc.gridy = 4; inputPanel.add(logInLabel, gbc);
-        gbc.gridx = 1; inputPanel.add(logInField, gbc);
-        gbc.gridx = 0; gbc.gridy = 5; inputPanel.add(logOutLabel, gbc);
-        gbc.gridx = 1; inputPanel.add(logOutField, gbc);
-        gbc.gridx = 1; gbc.gridy = 6; gbc.anchor = GridBagConstraints.CENTER; inputPanel.add(addButton, gbc);
-        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER; inputPanel.add(statusLabel, gbc);
+        gbc.gridwidth = 1;
+        gbc.gridy = 2;
+        gbc.gridx = 0;
+        inputPanel.add(employeeLabel, gbc);
+        gbc.gridx = 1;
+        inputPanel.add(attendanceEmployeeSelector, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        inputPanel.add(dateLabel, gbc);
+        gbc.gridx = 1;
+        inputPanel.add(dateField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        inputPanel.add(logInLabel, gbc);
+        gbc.gridx = 1;
+        inputPanel.add(logInField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        inputPanel.add(logOutLabel, gbc);
+        gbc.gridx = 1;
+        inputPanel.add(logOutField, gbc);
+        gbc.gridx = 1;
+        gbc.gridy = 6;
+        gbc.anchor = GridBagConstraints.CENTER;
+        inputPanel.add(addButton, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        inputPanel.add(statusLabel, gbc);
 
         String[] columns = {"Date", "Log In", "Log Out", "Hours Worked"};
         DefaultTableModel tableModel = new DefaultTableModel(columns, 0) {
@@ -360,6 +402,62 @@ public class MotorPHGUI extends JFrame {
             }
         });
 
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(new Color(240, 248, 255));
+        JButton updateAttendanceButton = new JButton("Update Attendance");
+        JButton deleteAttendanceButton = new JButton("Delete Attendance");
+        styleButton(updateAttendanceButton);
+        styleButton(deleteAttendanceButton);
+        buttonPanel.add(updateAttendanceButton);
+        buttonPanel.add(deleteAttendanceButton);
+
+        updateAttendanceButton.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow != -1) {
+                Employee selectedEmployee = (Employee) attendanceEmployeeSelector.getSelectedItem();
+                String date = (String) tableModel.getValueAt(selectedRow, 0);
+                double logInTime = (double) tableModel.getValueAt(selectedRow, 1);
+                double logOutTime = (double) tableModel.getValueAt(selectedRow, 2);
+                showEditAttendanceDialog(selectedEmployee, selectedRow, date, logInTime, logOutTime, tableModel);
+            } else {
+                statusLabel.setText("Select an attendance record to update!");
+                statusLabel.setForeground(Color.RED);
+            }
+        });
+
+        deleteAttendanceButton.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow != -1) {
+                int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this attendance record?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    Employee selectedEmployee = (Employee) attendanceEmployeeSelector.getSelectedItem();
+                    Attendance attendanceToRemove = null;
+                    for (Attendance att : selectedEmployee.getAttendanceRecords()) {
+                        if (att.getDate().equals(tableModel.getValueAt(selectedRow, 0))) {
+                            attendanceToRemove = att;
+                            break;
+                        }
+                    }
+                    if (attendanceToRemove != null) {
+                        selectedEmployee.getAttendanceRecords().remove(attendanceToRemove);
+                        attendanceRecords.remove(attendanceToRemove);
+                        tableModel.removeRow(selectedRow);
+                        statusLabel.setText("Attendance record deleted!");
+                        statusLabel.setForeground(Color.GREEN);
+                    }
+                }
+            } else {
+                statusLabel.setText("Select an attendance record to delete!");
+                statusLabel.setForeground(Color.RED);
+            }
+        });
+
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        inputPanel.add(buttonPanel, gbc);
+
         panel.add(inputPanel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
 
@@ -378,7 +476,9 @@ public class MotorPHGUI extends JFrame {
         JLabel titleLabel = new JLabel("Deductions Setup");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         titleLabel.setForeground(new Color(70, 130, 180));
-        gbc.gridwidth = 2; gbc.gridy = 0; panel.add(titleLabel, gbc);
+        gbc.gridwidth = 2;
+        gbc.gridy = 0;
+        panel.add(titleLabel, gbc);
 
         JLabel sssLabel = new JLabel("SSS:");
         sssLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -401,16 +501,74 @@ public class MotorPHGUI extends JFrame {
         JLabel statusLabel = new JLabel("");
         statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
-        gbc.gridwidth = 1; gbc.gridy = 1; panel.add(sssLabel, gbc);
-        gbc.gridx = 1; panel.add(sssField, gbc);
-        gbc.gridx = 0; gbc.gridy = 2; panel.add(pagibigLabel, gbc);
-        gbc.gridx = 1; panel.add(pagibigField, gbc);
-        gbc.gridx = 0; gbc.gridy = 3; panel.add(philhealthLabel, gbc);
-        gbc.gridx = 1; panel.add(philhealthField, gbc);
-        gbc.gridx = 0; gbc.gridy = 4; panel.add(taxLabel, gbc);
-        gbc.gridx = 1; panel.add(taxField, gbc);
-        gbc.gridx = 1; gbc.gridy = 5; gbc.anchor = GridBagConstraints.CENTER; panel.add(setButton, gbc);
-        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER; panel.add(statusLabel, gbc);
+        gbc.gridwidth = 1;
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        panel.add(sssLabel, gbc);
+        gbc.gridx = 1;
+        panel.add(sssField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        panel.add(pagibigLabel, gbc);
+        gbc.gridx = 1;
+        panel.add(pagibigField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        panel.add(philhealthLabel, gbc);
+        gbc.gridx = 1;
+        panel.add(philhealthField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        panel.add(taxLabel, gbc);
+        gbc.gridx = 1;
+        panel.add(taxField, gbc);
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        gbc.anchor = GridBagConstraints.CENTER;
+        panel.add(setButton, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        panel.add(statusLabel, gbc);
+
+        JButton updateDeductionsButton = new JButton("Update Deductions");
+        JButton deleteDeductionsButton = new JButton("Delete Deductions");
+        styleButton(updateDeductionsButton);
+        styleButton(deleteDeductionsButton);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(new Color(240, 248, 255));
+        buttonPanel.add(updateDeductionsButton);
+        buttonPanel.add(deleteDeductionsButton);
+        gbc.gridx = 1;
+        gbc.gridy = 7;
+        gbc.anchor = GridBagConstraints.CENTER;
+        panel.add(buttonPanel, gbc);
+
+        updateDeductionsButton.addActionListener(e -> {
+            if (deductions != null) {
+                showEditDeductionsDialog();
+                statusLabel.setText("Deductions updated successfully!");
+                statusLabel.setForeground(Color.GREEN);
+            } else {
+                statusLabel.setText("No deductions set to update!");
+                statusLabel.setForeground(Color.RED);
+            }
+        });
+
+        deleteDeductionsButton.addActionListener(e -> {
+            if (deductions != null) {
+                int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete deductions?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    deductions = null;
+                    statusLabel.setText("Deductions deleted!");
+                    statusLabel.setForeground(Color.GREEN);
+                }
+            } else {
+                statusLabel.setText("No deductions set to delete!");
+                statusLabel.setForeground(Color.RED);
+            }
+        });
 
         setButton.addActionListener(e -> {
             try {
@@ -450,7 +608,10 @@ public class MotorPHGUI extends JFrame {
         JLabel titleLabel = new JLabel("Salary Calculation");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         titleLabel.setForeground(new Color(70, 130, 180));
-        gbc.gridwidth = 2; gbc.gridy = 0; inputPanel.add(titleLabel, gbc);
+        gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        inputPanel.add(titleLabel, gbc);
 
         JLabel employeeLabel = new JLabel("Select Employee:");
         employeeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -463,9 +624,16 @@ public class MotorPHGUI extends JFrame {
         JButton calculateButton = new JButton("Calculate Salary");
         styleButton(calculateButton);
 
-        gbc.gridwidth = 1; gbc.gridy = 1; inputPanel.add(employeeLabel, gbc);
-        gbc.gridx = 1; inputPanel.add(salaryEmployeeSelector, gbc);
-        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.CENTER; inputPanel.add(calculateButton, gbc);
+        gbc.gridwidth = 1;
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        inputPanel.add(employeeLabel, gbc);
+        gbc.gridx = 1;
+        inputPanel.add(salaryEmployeeSelector, gbc);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        inputPanel.add(calculateButton, gbc);
 
         JTextArea resultArea = new JTextArea(15, 50);
         resultArea.setEditable(false);
@@ -525,6 +693,40 @@ public class MotorPHGUI extends JFrame {
             resultArea.setText(result.toString());
         });
 
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(new Color(240, 248, 255));
+        JButton updateSalaryButton = new JButton("Update Salary Record");
+        JButton deleteSalaryButton = new JButton("Delete Salary Record");
+        styleButton(updateSalaryButton);
+        styleButton(deleteSalaryButton);
+        buttonPanel.add(updateSalaryButton);
+        buttonPanel.add(deleteSalaryButton);
+
+        updateSalaryButton.addActionListener(e -> {
+            Employee selectedEmployee = (Employee) salaryEmployeeSelector.getSelectedItem();
+            if (selectedEmployee != null) {
+                showEditEmployeeDialog(selectedEmployee);
+                resultArea.setText(getSalaryDetails(selectedEmployee));
+            }
+        });
+
+        deleteSalaryButton.addActionListener(e -> {
+            Employee selectedEmployee = (Employee) salaryEmployeeSelector.getSelectedItem();
+            if (selectedEmployee != null) {
+                int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete salary records for " + selectedEmployee.getEmployeeName() + "?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    selectedEmployee.getAttendanceRecords().clear();
+                    resultArea.setText("Salary records for " + selectedEmployee.getEmployeeName() + " deleted!");
+                }
+            }
+        });
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        inputPanel.add(buttonPanel, gbc);
+
         panel.add(inputPanel, BorderLayout.NORTH);
         panel.add(textScrollPane, BorderLayout.CENTER);
 
@@ -542,14 +744,138 @@ public class MotorPHGUI extends JFrame {
         ));
         button.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(MouseEvent evt) {
-                button.setBackground(new Color(100, 149, 237));
-            }
+            public void mouseEntered(MouseEvent evt) { button.setBackground(new Color(100, 149, 237)); }
             @Override
-            public void mouseExited(MouseEvent evt) {
-                button.setBackground(new Color(70, 130, 180));
-            }
+            public void mouseExited(MouseEvent evt) { button.setBackground(new Color(70, 130, 180)); }
         });
+    }
+
+    private void showEditEmployeeDialog(Employee employee) {
+        JTextField empNumberField = new JTextField(String.valueOf(employee.getEmployeeNumber()), 10);
+        JTextField lastNameField = new JTextField(employee.getLastName(), 10);
+        JTextField firstNameField = new JTextField(employee.getFirstName(), 10);
+        JTextField positionField = new JTextField(employee.getPosition(), 10);
+        JTextField basicSalaryField = new JTextField(String.valueOf(employee.getBasicSalary()), 10);
+
+        JPanel dialogPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        dialogPanel.add(new JLabel("Employee #:"));
+        dialogPanel.add(empNumberField);
+        dialogPanel.add(new JLabel("Last Name:"));
+        dialogPanel.add(lastNameField);
+        dialogPanel.add(new JLabel("First Name:"));
+        dialogPanel.add(firstNameField);
+        dialogPanel.add(new JLabel("Position:"));
+        dialogPanel.add(positionField);
+        dialogPanel.add(new JLabel("Basic Salary:"));
+        dialogPanel.add(basicSalaryField);
+
+        int result = JOptionPane.showConfirmDialog(this, dialogPanel, "Update Employee", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                employee.setEmployeeNumber(Integer.parseInt(empNumberField.getText()));
+                employee.setLastName(lastNameField.getText());
+                employee.setFirstName(firstNameField.getText());
+                employee.setPosition(positionField.getText());
+                employee.setBasicSalary(Double.parseDouble(basicSalaryField.getText()));
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid number format!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void showEditAttendanceDialog(Employee employee, int row, String date, double logInTime, double logOutTime, DefaultTableModel tableModel) {
+        JTextField dateField = new JTextField(date, 10);
+        JTextField logInField = new JTextField(String.valueOf(logInTime), 10);
+        JTextField logOutField = new JTextField(String.valueOf(logOutTime), 10);
+
+        JPanel dialogPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        dialogPanel.add(new JLabel("Date (YYYY-MM-DD):"));
+        dialogPanel.add(dateField);
+        dialogPanel.add(new JLabel("Log In Time:"));
+        dialogPanel.add(logInField);
+        dialogPanel.add(new JLabel("Log Out Time:"));
+        dialogPanel.add(logOutField);
+
+        int result = JOptionPane.showConfirmDialog(this, dialogPanel, "Update Attendance", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                String newDate = dateField.getText();
+                double newLogInTime = Double.parseDouble(logInField.getText());
+                double newLogOutTime = Double.parseDouble(logOutField.getText());
+                Attendance attendance = employee.getAttendanceRecords().get(row);
+                attendance.setDate(newDate);
+                attendance.setLogInTime(newLogInTime);
+                attendance.setLogOutTime(newLogOutTime);
+                tableModel.setValueAt(newDate, row, 0);
+                tableModel.setValueAt(newLogInTime, row, 1);
+                tableModel.setValueAt(newLogOutTime, row, 2);
+                tableModel.setValueAt(String.format("%.2f", attendance.calculateHoursWorked()), row, 3);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid time format!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void showEditDeductionsDialog() {
+        JTextField sssField = new JTextField(String.valueOf(deductions.getSss()), 10);
+        JTextField pagibigField = new JTextField(String.valueOf(deductions.getPagibig()), 10);
+        JTextField philhealthField = new JTextField(String.valueOf(deductions.getPhilhealth()), 10);
+        JTextField taxField = new JTextField(String.valueOf(deductions.getWithholdingTax()), 10);
+
+        JPanel dialogPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        dialogPanel.add(new JLabel("SSS:"));
+        dialogPanel.add(sssField);
+        dialogPanel.add(new JLabel("Pag-IBIG:"));
+        dialogPanel.add(pagibigField);
+        dialogPanel.add(new JLabel("PhilHealth:"));
+        dialogPanel.add(philhealthField);
+        dialogPanel.add(new JLabel("Withholding Tax:"));
+        dialogPanel.add(taxField);
+
+        int result = JOptionPane.showConfirmDialog(this, dialogPanel, "Update Deductions", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                deductions.setSss(Double.parseDouble(sssField.getText()));
+                deductions.setPagibig(Double.parseDouble(pagibigField.getText()));
+                deductions.setPhilhealth(Double.parseDouble(philhealthField.getText()));
+                deductions.setWithholdingTax(Double.parseDouble(taxField.getText()));
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid number format!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private String getEmployeeProfile(Employee employee) {
+        StringBuilder profile = new StringBuilder();
+        profile.append("Employee Number: ").append(employee.getEmployeeNumber()).append("\n");
+        profile.append("Last Name: ").append(employee.getLastName()).append("\n");
+        profile.append("First Name: ").append(employee.getFirstName()).append("\n");
+        profile.append("Birth Date: ").append(employee.getBirthDate()).append("\n");
+        profile.append("Address: ").append(employee.getAddress()).append("\n");
+        profile.append("Phone Number: ").append(employee.getPhoneNumber()).append("\n");
+        profile.append("SSS Number: ").append(employee.getSssNumber()).append("\n");
+        profile.append("PhilHealth Number: ").append(employee.getPhilhealthNumber()).append("\n");
+        profile.append("TIN Number: ").append(employee.getTinNumber()).append("\n");
+        profile.append("Pag-IBIG Number: ").append(employee.getPagibigNumber()).append("\n");
+        profile.append("Status: ").append(employee.getStatus()).append("\n");
+        profile.append("Position: ").append(employee.getPosition()).append("\n");
+        profile.append("Immediate Supervisor: ").append(employee.getImmediateSupervisor()).append("\n");
+        profile.append("Basic Salary: ").append(String.format("%,.2f", employee.getBasicSalary())).append("\n");
+        profile.append("Rice Subsidy: ").append(String.format("%,.2f", employee.getRiceSubsidy())).append("\n");
+        profile.append("Phone Allowance: ").append(String.format("%,.2f", employee.getPhoneAllowance())).append("\n");
+        profile.append("Clothing Allowance: ").append(String.format("%,.2f", employee.getClothingAllowance())).append("\n");
+        profile.append("Gross Semi-Monthly Salary: ").append(String.format("%,.2f", employee.getGrossSemiMonthlySalary())).append("\n");
+        profile.append("Hourly Rate: ").append(String.format("%,.2f", employee.getHourlyRate())).append("\n");
+        return profile.toString();
+    }
+
+    private String getSalaryDetails(Employee employee) {
+        StringBuilder result = new StringBuilder();
+        result.append("Employee: ").append(employee.getEmployeeName()).append(" (ID: ").append(employee.getEmployeeNumber()).append(")\n");
+        result.append("Position: ").append(employee.getPosition()).append("\n");
+        result.append("Basic Salary: ").append(String.format("%,.2f", employee.getBasicSalary())).append("\n");
+        result.append("Hourly Rate: ").append(String.format("%,.2f", employee.getHourlyRate())).append("\n");
+        return result.toString();
     }
 
     public static void main(String[] args) {
