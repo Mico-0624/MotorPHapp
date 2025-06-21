@@ -1,10 +1,18 @@
 package com.example.Motor.PHapp;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
+import com.opencsv.exceptions.CsvValidationException;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.io.File;
 import java.awt.event.*;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +24,28 @@ public class MotorPHGUI extends JFrame {
     private final SalaryCalculator salaryCalculator;
     private final JTabbedPane tabbedPane;
     private boolean isLoggedIn;
+    private static final String USERS_FILE = "users.csv";
+    private static final String EMPLOYEES_FILE = "employees.csv";
+
+    private class EmployeeComboBoxRenderer extends JLabel implements ListCellRenderer<Employee> {
+        @Override
+        public Component getListCellRendererComponent(JList<? extends Employee> list, Employee value, int index, boolean isSelected, boolean cellHasFocus) {
+            if (value != null) {
+                setText(value.getLastName() + ", " + value.getFirstName());
+            } else {
+                setText("");
+            }
+            if (isSelected) {
+                setBackground(list.getSelectionBackground());
+                setForeground(list.getSelectionForeground());
+            } else {
+                setBackground(list.getBackground());
+                setForeground(list.getForeground());
+            }
+            setOpaque(true);
+            return this;
+        }
+    }
 
     public MotorPHGUI() {
         setTitle("MotorPH Payroll System");
@@ -35,6 +65,7 @@ public class MotorPHGUI extends JFrame {
         salaryCalculator = new SalaryCalculator();
         isLoggedIn = false;
 
+        loadUserData();
         loadEmployeeData();
 
         JPanel mainPanel = new JPanel(new BorderLayout()) {
@@ -67,111 +98,204 @@ public class MotorPHGUI extends JFrame {
         }
     }
 
+    private void loadUserData() {
+    File file = new File(USERS_FILE);
+    boolean isValid = true;
+    if (file.exists()) {
+        try (CSVReader csvReader = new CSVReader(new FileReader(file))) {
+            String[] nextRecord;
+            while ((nextRecord = csvReader.readNext()) != null) {
+                if (nextRecord.length >= 2) {
+                    // Basic validation for BCrypt hash (starts with $2a$ or similar and is ~60 chars)
+                    if (!nextRecord[1].matches("^\\$2[ayb]\\$.{56}$")) {
+                        System.out.println("Invalid hash format for user: " + nextRecord[0]);
+                        isValid = false;
+                        break;
+                    }
+                    System.out.println("Loaded user: " + nextRecord[0]);
+                } else {
+                    System.out.println("Invalid CSV row: " + String.join(",", nextRecord));
+                    isValid = false;
+                    break;
+                }
+            }
+        } catch (IOException | CsvValidationException e) {
+            System.out.println("Failed to load users.csv: " + e.getMessage());
+            isValid = false;
+        }
+    } else {
+        isValid = false;
+    }
+
+    if (!isValid) {
+        System.out.println("users.csv is missing or invalid, creating default user.");
+        file.delete(); // Delete invalid file
+        saveUserData("admin", "password");
+    }
+}
+
+    private void saveUserData(String username, String password) {
+    try (CSVWriter writer = new CSVWriter(new FileWriter(USERS_FILE))) { // Remove "true" to overwrite
+        String[] record = {username, BCrypt.withDefaults().hashToString(12, password.toCharArray())};
+        writer.writeNext(record);
+    } catch (IOException e) {
+        System.err.println("Failed to save user data: " + e.getMessage());
+        e.printStackTrace();
+    }
+}
+
     private void loadEmployeeData() {
-        employees.add(new Employee(10001, "Garcia", "Manuel III", "10/11/1983", "Valero Carpark Building Valero Street 1227, Makati City", "966-860-270", "44-4506057-3", "820126853951", "442-605-657-000", "691295330870", "Regular", "Chief Executive Officer", "N/A", 90000, 1500, 2000, 1000, 45000, 535.71));
-        employees.add(new Employee(10002, "Lim", "Antonio", "06/19/1988", "San Antonio De Padua 2, Block 1 Lot 8 and 2, Dasmarinas, Cavite", "171-867-411", "52-2061274-9", "331735646338", "683-102-776-000", "663904995411", "Regular", "Chief Operating Officer", "Garcia, Manuel III", 60000, 1500, 2000, 1000, 30000, 357.14));
-        employees.add(new Employee(10003, "Aquino", "Bianca Sofia", "08/04/1989", "Rm. 402 4/F Jiao Building Timog Avenue Cor. Quezon Avenue 1100, Quezon City", "966-889-370", "30-8870406-2", "177451189665", "971-711-280-000", "171519773969", "Regular", "Chief Finance Officer", "Garcia, Manuel III", 60000, 1500, 2000, 1000, 30000, 357.14));
-        employees.add(new Employee(10004, "Reyes", "Isabella", "06/16/1994", "460 Solanda Street Intramuros 1000, Manila", "786-868-477", "40-2511815-0", "341911411254", "876-809-437-000", "416946776041", "Regular", "Chief Marketing Officer", "Garcia, Manuel III", 60000, 1500, 2000, 1000, 30000, 357.14));
-        employees.add(new Employee(10005, "Hernandez", "Eduard", "09/23/1989", "National Highway, Gingoog, Misamis Occidental", "088-861-012", "50-5577638-1", "957436191812", "031-702-374-000", "952347222457", "Regular", "IT Operations and Systems", "Lim, Antonio", 52670, 1500, 1000, 1000, 26335, 313.51));
-        employees.add(new Employee(10006, "Villanueva", "Andrea Mae", "02/14/1988", "17/85 Stracke Via Suite 042, Poblacion, Las Piñas 4783 Dinagat Islands", "918-621-603", "49-1632020-8", "382189453145", "317-674-022-000", "441093369646", "Regular", "HR Manager", "Lim, Antonio", 52670, 1500, 1000, 1000, 26335, 313.51));
-        employees.add(new Employee(10007, "San Jose", "Brad", "03/15/1996", "99 Strosin Hills, Poblacion, Bislig 5340 Tawi-Tawi", "797-009-261", "40-2400714-1", "239192926939", "672-474-690-000", "210850209964", "Regular", "HR Team Leader", "Villanueva, Andrea Mae", 42975, 1500, 800, 800, 21488, 255.80));
-        employees.add(new Employee(10008, "Romualdez", "Alice", "05/14/1992", "12A/33 Upton Isle Apt. 420, Roxas City 1814 Surigao del Norte", "983-606-799", "55-4476527-2", "545652640232", "888-572-294-000", "211385556888", "Regular", "HR Rank and File", "San Jose, Brad", 22500, 1500, 500, 500, 11250, 133.93));
-        employees.add(new Employee(10009, "Atienza", "Rosie", "09/24/1948", "90A Dibbert Terrace Apt. 190, San Lorenzo 6056 Davao del Norte", "266-036-427", "41-0644692-3", "708988234853", "604-997-793-000", "260107732354", "Regular", "HR Rank and File", "San Jose, Brad", 22500, 1500, 500, 500, 11250, 133.93));
-        employees.add(new Employee(10010, "Alvaro", "Roderick", "03/30/1988", "#284 T. Morato corner, Scout Rallos Street, Quezon City", "053-381-386", "64-7605054-4", "578114853194", "525-420-419-000", "799254095212", "Regular", "Accounting Head", "Aquino, Bianca Sofia", 52670, 1500, 1000, 1000, 26335, 313.51));
-        employees.add(new Employee(10011, "Salcedo", "Anthony", "09/14/1993", "93/54 Shanahan Alley Apt. 183, Santo Tomas 1572 Masbate", "070-766-300", "26-9647608-3", "126445315651", "210-805-911-000", "218002473454", "Regular", "Payroll Manager", "Alvaro, Roderick", 50825, 1500, 1000, 1000, 25413, 302.53));
-        employees.add(new Employee(10012, "Lopez", "Josie", "01/14/1987", "49 Springs Apt. 266, Poblacion, Taguig 3200 Occidental Mindoro", "478-355-427", "44-8563448-3", "431709011012", "218-489-737-000", "113071293354", "Regular", "Payroll Team Leader", "Salcedo, Anthony", 38475, 1500, 800, 800, 19238, 229.02));
-        employees.add(new Employee(10013, "Farala", "Martha", "01/11/1942", "42/25 Sawayn Stream, Ubay 1208 Zamboanga del Norte", "329-034-366", "45-5656375-0", "233693897247", "210-835-851-000", "631130283546", "Regular", "Payroll Rank and File", "Salcedo, Anthony", 24000, 1500, 500, 500, 12000, 142.86));
-        employees.add(new Employee(10014, "Martinez", "Leila", "07/11/1970", "37/46 Kulas Roads, Maragondon 0962 Quirino", "877-110-749", "27-2090996-4", "515741057496", "275-792-513-000", "101205445886", "Regular", "Payroll Rank and File", "Salcedo, Anthony", 24000, 1500, 500, 500, 12000, 142.86));
-        employees.add(new Employee(10015, "Romualdez", "Fredrick", "03/10/1985", "22A/52 Lubowitz Meadows, Pililla 4895 Zambales", "023-079-009", "26-8768374-1", "308366860059", "598-065-761-000", "223057707853", "Regular", "Account Manager", "Lim, Antonio", 53500, 1500, 1000, 1000, 26750, 318.45));
-        employees.add(new Employee(10016, "Mata", "Christian", "10/21/1987", "90 O'Keefe Spur Apt. 379, Catigbian 2772 Sulu", "783-776-744", "49-2959312-6", "824187961962", "103-100-522-000", "631052853464", "Regular", "Account Team Leader", "Romualdez, Fredrick", 42975, 1500, 800, 800, 21488, 255.80));
-        employees.add(new Employee(10017, "De Leon", "Selena", "02/20/1975", "89A Armstrong Trace, Compostela 7874 Maguindanao", "975-432-139", "27-2090208-8", "587272469938", "482-259-498-000", "719007608464", "Regular", "Account Team Leader", "Romualdez, Fredrick", 41850, 1500, 800, 800, 20925, 249.11));
-        employees.add(new Employee(10018, "San Jose", "Allison", "06/24/1986", "08 Grant Drive Suite 406, Poblacion, Iloilo City 9186 La Union", "179-075-129", "45-3251383-0", "745148459521", "121-203-336-000", "114901859343", "Regular", "Account Rank and File", "Mata, Christian", 22500, 1500, 500, 500, 11250, 133.93));
-        employees.add(new Employee(10019, "Rosario", "Cydney", "10/06/1996", "93A/21 Berge Points, Tapaz 2180 Quezon", "868-819-912", "49-1629900-2", "579253435499", "122-244-511-000", "265104358643", "Regular", "Account Rank and File", "Mata, Christian", 22500, 1500, 500, 500, 11250, 133.93));
-        employees.add(new Employee(10020, "Bautista", "Mark", "02/12/1991", "65 Murphy Center Suite 094, Poblacion, Palayan 5636 Quirino", "683-725-348", "49-1647342-5", "399665157135", "273-970-941-000", "260054585575", "Regular", "Account Rank and File", "Mata, Christian", 23250, 1500, 500, 500, 11625, 138.39));
-        employees.add(new Employee(10021, "Lazaro", "Darlene", "11/25/1985", "47A/94 Larkin Plaza Apt. 179, Poblacion, Caloocan 2751 Quirino", "740-721-558", "45-5617168-2", "606386917510", "354-650-951-000", "104907708845", "Probationary", "Account Rank and File", "Mata, Christian", 23250, 1500, 500, 500, 11625, 138.39));
-        employees.add(new Employee(10022, "Delos Santos", "Kolby", "02/26/1980", "06A Gulgowski Extensions, Bongabon 6085 Zamboanga del Sur", "739-443-033", "52-0109570-6", "357451271274", "187-500-345-000", "113017988667", "Probationary", "Account Rank and File", "Mata, Christian", 24000, 1500, 500, 500, 12000, 142.86));
-        employees.add(new Employee(10023, "Santos", "Vella", "12/31/1983", "99A Padberg Spring, Poblacion, Mabalacat 3959 Lanao del Sur", "955-879-269", "52-9883524-3", "548670482885", "101-558-994-000", "360028104576", "Probationary", "Account Rank and File", "Mata, Christian", 22500, 1500, 500, 500, 11250, 133.93));
-        employees.add(new Employee(10024, "Del Rosario", "Tomas", "12/18/1978", "80A/48 Ledner Ridges, Poblacion, Kabankalan 8870 Marinduque", "882-550-989", "45-5866331-6", "953901539995", "560-735-732-000", "913108649964", "Probationary", "Account Rank and File", "Mata, Christian", 22500, 1500, 500, 500, 11250, 133.93));
-        employees.add(new Employee(10025, "Tolentino", "Jacklyn", "05/19/1984", "96/48 Watsica Flats Suite 734, Poblacion, Malolos 1844 Ifugao", "675-757-366", "47-1692793-0", "753800654114", "841-177-857-000", "210546661243", "Probationary", "Account Rank and File", "De Leon, Selena", 24000, 1500, 500, 500, 12000, 142.86));
-        employees.add(new Employee(10026, "Gutierrez", "Percival", "12/18/1970", "58A Wilderman Walks, Poblacion, Digos 5822 Davao del Sur", "512-899-876", "40-9504657-8", "797639382265", "502-995-671-000", "210897095686", "Probationary", "Account Rank and File", "De Leon, Selena", 24750, 1500, 500, 500, 12375, 147.32));
-        employees.add(new Employee(10027, "Manalaysay", "Garfield", "08/28/1986", "60 Goyette Valley Suite 219, Poblacion, Tabuk 3159 Lanao del Sur", "948-628-136", "45-3298166-4", "810909286264", "336-676-445-000", "211274476563", "Probationary", "Account Rank and File", "De Leon, Selena", 24750, 1500, 500, 500, 12375, 147.32));
-        employees.add(new Employee(10028, "Villegas", "Lizeth", "12/12/1981", "66/77 Mann Views, Luisiana 1263 Dinagat Islands", "332-372-215", "40-2400719-4", "934389652994", "210-395-397-000", "122238077997", "Probationary", "Account Rank and File", "De Leon, Selena", 24000, 1500, 500, 500, 12000, 142.86));
-        employees.add(new Employee(10029, "Ramos", "Carol", "08/20/1978", "72/70 Stamm Spurs, Bustos 4550 Iloilo", "250-700-389", "60-1152206-4", "351830469744", "395-032-717-000", "212141893454", "Probationary", "Account Rank and File", "De Leon, Selena", 22500, 1500, 500, 500, 11250, 133.93));
-        employees.add(new Employee(10030, "Maceda", "Emelia", "04/14/1973", "50A/83 Bahringer Oval Suite 145, Kiamba 7688 Nueva Ecija", "973-358-041", "54-1331005-0", "465087894112", "215-973-013-000", "515012579765", "Probationary", "Account Rank and File", "De Leon, Selena", 22500, 1500, 500, 500, 11250, 133.93));
-        employees.add(new Employee(10031, "Aguilar", "Delia", "01/27/1989", "95 Cremin Junction, Surallah 2809 Cotabato", "529-705-439", "52-1859253-1", "136451303068", "599-312-588-000", "110018813465", "Probationary", "Account Rank and File", "De Leon, Selena", 22500, 1500, 500, 500, 11250, 133.93));
-        employees.add(new Employee(10032, "Castro", "John Rafael", "02/09/1989", "Hi-way, Yati, Liloan Cebu", "332-424-955", "26-7145133-4", "601644902402", "404-768-309-000", "697764000000", "Regular", "Sales & Marketing", "Reyes, Isabella", 52670, 1500, 1000, 1000, 26335, 313.51));
-        employees.add(new Employee(10033, "Martinez", "Carlos Ian", "11/16/1990", "Bulala, Camalaniugan", "078-854-208", "11-5062972-7", "380685387212", "256-436-296-000", "993372337726", "Regular", "Supply Chain and Logistics", "Reyes, Isabella", 52670, 1500, 1000, 1000, 26335, 313.51));
-        employees.add(new Employee(10034, "Santos", "Beatriz", "08/07/1990", "Agapita Building, Metro Manila", "526-639-511", "20-2987501-5", "918460050077", "911-529-713-441", "874042259378", "Regular", "Customer Service and Relations", "Reyes, Isabella", 52670, 1500, 1000, 1000, 26335, 313.51));
+    try (CSVReader csvReader = new CSVReader(new FileReader(EMPLOYEES_FILE))) {
+        String[] headers = csvReader.readNext(); // Skip or use headers if present
+        String[] nextRecord;
+        while ((nextRecord = csvReader.readNext()) != null) {
+            if (nextRecord.length >= 19) {
+                employees.add(new Employee(
+                    Integer.parseInt(nextRecord[0]), // employeeNumber
+                    nextRecord[1], // lastName
+                    nextRecord[2], // firstName
+                    nextRecord[3], // birthDate
+                    nextRecord[4], // address
+                    nextRecord[5], // phoneNumber
+                    nextRecord[6], // sssNumber
+                    nextRecord[7], // philhealthNumber
+                    nextRecord[8], // tinNumber
+                    nextRecord[9], // pagibigNumber
+                    nextRecord[10], // status
+                    nextRecord[11], // position
+                    nextRecord[12], // immediateSupervisor
+                    Double.parseDouble(nextRecord[13].replace(",", "")), // basicSalary
+                    Double.parseDouble(nextRecord[14].replace(",", "")), // riceSubsidy
+                    Double.parseDouble(nextRecord[15].replace(",", "")), // phoneAllowance
+                    Double.parseDouble(nextRecord[16].replace(",", "")), // clothingAllowance
+                    Double.parseDouble(nextRecord[17].replace(",", "")), // grossSemiMonthlySalary
+                    Double.parseDouble(nextRecord[18].replace(",", "")) // hourlyRate
+                ));
+            }
+        }
+    } catch (IOException | CsvValidationException e) {
+            // Create default employees if file doesn't exist or is invalid
+            saveEmployeeData();
+        }
+    }
+
+    private void saveEmployeeData() {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(EMPLOYEES_FILE))) {
+            String[] headers = {"employeeNumber", "lastName", "firstName", "birthDate", "address", "phoneNumber", "sssNumber",
+                              "philhealthNumber", "tinNumber", "pagibigNumber", "status", "position", "immediateSupervisor",
+                              "basicSalary", "riceSubsidy", "phoneAllowance", "clothingAllowance", "grossSemiMonthlySalary", "hourlyRate"};
+            writer.writeNext(headers);
+            for (Employee emp : employees) {
+                String[] record = {
+                    String.valueOf(emp.getEmployeeNumber()), emp.getLastName(), emp.getFirstName(), emp.getBirthDate(),
+                    emp.getAddress(), emp.getPhoneNumber(), emp.getSssNumber(), emp.getPhilhealthNumber(), emp.getTinNumber(),
+                    emp.getPagibigNumber(), emp.getStatus(), emp.getPosition(), emp.getImmediateSupervisor(),
+                    String.valueOf(emp.getBasicSalary()), String.valueOf(emp.getRiceSubsidy()),
+                    String.valueOf(emp.getPhoneAllowance()), String.valueOf(emp.getClothingAllowance()),
+                    String.valueOf(emp.getGrossSemiMonthlySalary()), String.valueOf(emp.getHourlyRate())
+                };
+                writer.writeNext(record);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void createLoginTab() {
-        JPanel loginPanel = new JPanel(new GridBagLayout());
-        loginPanel.setBackground(new Color(240, 248, 255));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.anchor = GridBagConstraints.CENTER;
+    JPanel loginPanel = new JPanel(new GridBagLayout());
+    loginPanel.setBackground(new Color(240, 248, 255));
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.insets = new Insets(10, 10, 10, 10);
+    gbc.anchor = GridBagConstraints.CENTER;
 
-        JLabel titleLabel = new JLabel("MotorPH Payroll System Login");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(new Color(70, 130, 180));
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        loginPanel.add(titleLabel, gbc);
+    JLabel titleLabel = new JLabel("MotorPH Payroll System Login");
+    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+    titleLabel.setForeground(new Color(70, 130, 180));
+    gbc.gridx = 0;
+    gbc.gridy = 0;
+    gbc.gridwidth = 2;
+    loginPanel.add(titleLabel, gbc);
 
-        JLabel usernameLabel = new JLabel("Username:");
-        usernameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        JTextField usernameField = new JTextField(15);
-        usernameField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        JLabel passwordLabel = new JLabel("Password:");
-        passwordLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        JPasswordField passwordField = new JPasswordField(15);
-        passwordField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        JButton loginButton = new JButton("Login");
-        styleButton(loginButton);
-        JLabel loginStatusLabel = new JLabel("");
-        loginStatusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    JLabel usernameLabel = new JLabel("Username:");
+    usernameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    JTextField usernameField = new JTextField(15);
+    usernameField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    JLabel passwordLabel = new JLabel("Password:");
+    passwordLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    JPasswordField passwordField = new JPasswordField(15);
+    passwordField.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    JButton loginButton = new JButton("Login");
+    styleButton(loginButton);
+    JLabel loginStatusLabel = new JLabel("");
+    loginStatusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
-        gbc.gridwidth = 1;
-        gbc.gridy = 1;
-        gbc.gridx = 0;
-        loginPanel.add(usernameLabel, gbc);
-        gbc.gridx = 1;
-        loginPanel.add(usernameField, gbc);
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        loginPanel.add(passwordLabel, gbc);
-        gbc.gridx = 1;
-        loginPanel.add(passwordField, gbc);
-        gbc.gridx = 1;
-        gbc.gridy = 3;
-        loginPanel.add(loginButton, gbc);
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 2;
-        loginPanel.add(loginStatusLabel, gbc);
+    gbc.gridwidth = 1;
+    gbc.gridy = 1;
+    gbc.gridx = 0;
+    loginPanel.add(usernameLabel, gbc);
+    gbc.gridx = 1;
+    loginPanel.add(usernameField, gbc);
+    gbc.gridx = 0;
+    gbc.gridy = 2;
+    loginPanel.add(passwordLabel, gbc);
+    gbc.gridx = 1;
+    loginPanel.add(passwordField, gbc);
+    gbc.gridx = 1;
+    gbc.gridy = 3;
+    loginPanel.add(loginButton, gbc);
+    gbc.gridx = 0;
+    gbc.gridy = 4;
+    gbc.gridwidth = 2;
+    loginPanel.add(loginStatusLabel, gbc);
 
-        loginButton.addActionListener(e -> {
-            String username = usernameField.getText();
-            String password = new String(passwordField.getPassword());
-            user = new User(username, password);
-
-            if (user.isValid()) {
-                loginStatusLabel.setText("Login successful!");
-                loginStatusLabel.setForeground(Color.GREEN);
-                isLoggedIn = true;
-                for (int i = 1; i < tabbedPane.getTabCount(); i++) {
-                    tabbedPane.setEnabledAt(i, true);
+    loginButton.addActionListener(e -> {
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword());
+        user = new User(username, ""); // Note: Empty password here
+        System.out.println("Attempting login for username: " + username + ", password: " + password);
+        try (CSVReader csvReader = new CSVReader(new FileReader(USERS_FILE))) {
+            String[] nextRecord;
+            boolean found = false;
+            System.out.println("Reading users.csv at: " + new File(USERS_FILE).getAbsolutePath());
+            while ((nextRecord = csvReader.readNext()) != null) {
+                System.out.println("CSV row: " + String.join(",", nextRecord));
+                if (nextRecord.length >= 2 && nextRecord[0].equals(username)) {
+                    found = true;
+                    System.out.println("Found user: " + username + ", hashed password: " + nextRecord[1]);
+                    if (BCrypt.verifyer().verify(password.toCharArray(), nextRecord[1]).verified) {
+                        loginStatusLabel.setText("Login successful!");
+                        loginStatusLabel.setForeground(Color.GREEN);
+                        isLoggedIn = true;
+                        for (int i = 1; i < tabbedPane.getTabCount(); i++) {
+                            tabbedPane.setEnabledAt(i, true);
+                        }
+                        tabbedPane.setSelectedIndex(1);
+                        System.out.println("Login successful for " + username);
+                        break;
+                    } else {
+                        System.out.println("Password verification failed for " + username);
+                    }
                 }
-                tabbedPane.setSelectedIndex(1);
-            } else {
-                loginStatusLabel.setText("Invalid username or password!");
-                loginStatusLabel.setForeground(Color.RED);
             }
-        });
+            if (!found) {
+                loginStatusLabel.setText("User not found!");
+                loginStatusLabel.setForeground(Color.RED);
+                System.out.println("User not found: " + username);
+            } else if (!isLoggedIn) {
+                loginStatusLabel.setText("Invalid password!");
+                loginStatusLabel.setForeground(Color.RED);
+                System.out.println("Invalid password for " + username);
+            }
+        } catch (IOException | CsvValidationException ex) {
+            loginStatusLabel.setText("Error loading user data!");
+            loginStatusLabel.setForeground(Color.RED);
+            System.out.println("Error loading user data: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    });
 
-        tabbedPane.addTab("Login", loginPanel);
-    }
+    tabbedPane.addTab("Login", loginPanel);
+}
 
     private void createEmployeeTab() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -205,6 +329,7 @@ public class MotorPHGUI extends JFrame {
         for (Employee emp : employees) {
             employeeSelector.addItem(emp);
         }
+        employeeSelector.setRenderer(new EmployeeComboBoxRenderer());
         employeeSelector.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         employeeSelector.setBackground(Color.WHITE);
         JPanel selectorPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -233,10 +358,13 @@ public class MotorPHGUI extends JFrame {
         buttonPanel.setBackground(new Color(240, 248, 255));
         JButton updateButton = new JButton("Update Employee");
         JButton deleteButton = new JButton("Delete Employee");
+        JButton addButton = new JButton("Add Employee");
         styleButton(updateButton);
         styleButton(deleteButton);
+        styleButton(addButton);
         buttonPanel.add(updateButton);
         buttonPanel.add(deleteButton);
+        buttonPanel.add(addButton);
 
         updateButton.addActionListener(e -> {
             Employee selectedEmployee = (Employee) employeeSelector.getSelectedItem();
@@ -251,6 +379,7 @@ public class MotorPHGUI extends JFrame {
                     tableModel.setValueAt(selectedEmployee.getBasicSalary(), selectedRow, 4);
                 }
                 profileArea.setText(getEmployeeProfile(selectedEmployee));
+                saveEmployeeData();
             }
         });
 
@@ -263,8 +392,14 @@ public class MotorPHGUI extends JFrame {
                     tableModel.removeRow(employeeTable.getSelectedRow());
                     employeeSelector.removeItem(selectedEmployee);
                     profileArea.setText("");
+                    saveEmployeeData();
                 }
             }
+        });
+
+        addButton.addActionListener(e -> {
+            showAddEmployeeDialog(tableModel, employeeSelector, profileArea);
+            saveEmployeeData();
         });
 
         profilePanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -279,6 +414,51 @@ public class MotorPHGUI extends JFrame {
 
         if (employeeSelector.getItemCount() > 0) {
             employeeSelector.setSelectedIndex(0);
+        }
+    }
+
+    private void showAddEmployeeDialog(DefaultTableModel tableModel, JComboBox<Employee> employeeSelector, JTextArea profileArea) {
+        JTextField empNumberField = new JTextField(10);
+        JTextField lastNameField = new JTextField(10);
+        JTextField firstNameField = new JTextField(10);
+        JTextField positionField = new JTextField(10);
+        JTextField basicSalaryField = new JTextField(10);
+
+        JPanel dialogPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        dialogPanel.add(new JLabel("Employee #:"));
+        dialogPanel.add(empNumberField);
+        dialogPanel.add(new JLabel("Last Name:"));
+        dialogPanel.add(lastNameField);
+        dialogPanel.add(new JLabel("First Name:"));
+        dialogPanel.add(firstNameField);
+        dialogPanel.add(new JLabel("Position:"));
+        dialogPanel.add(positionField);
+        dialogPanel.add(new JLabel("Basic Salary:"));
+        dialogPanel.add(basicSalaryField);
+
+        int result = JOptionPane.showConfirmDialog(this, dialogPanel, "Add New Employee", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                int empNumber = Integer.parseInt(empNumberField.getText());
+                String lastName = lastNameField.getText();
+                String firstName = firstNameField.getText();
+                String position = positionField.getText();
+                double basicSalary = Double.parseDouble(basicSalaryField.getText());
+                double riceSubsidy = 1500;
+                double phoneAllowance = 500;
+                double clothingAllowance = 500;
+                double grossSemiMonthlySalary = basicSalary / 2;
+                double hourlyRate = grossSemiMonthlySalary / 173.33;
+
+                Employee newEmployee = new Employee(empNumber, lastName, firstName, "", "", "", "", "", "", "", "Regular", position, "N/A", basicSalary, riceSubsidy, phoneAllowance, clothingAllowance, grossSemiMonthlySalary, hourlyRate);
+                employees.add(newEmployee);
+                tableModel.addRow(new Object[]{empNumber, lastName, firstName, position, basicSalary});
+                employeeSelector.addItem(newEmployee);
+                employeeSelector.setSelectedItem(newEmployee);
+                profileArea.setText(getEmployeeProfile(newEmployee));
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid number format!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -307,6 +487,7 @@ public class MotorPHGUI extends JFrame {
         for (Employee emp : employees) {
             attendanceEmployeeSelector.addItem(emp);
         }
+        attendanceEmployeeSelector.setRenderer(new EmployeeComboBoxRenderer());
         attendanceEmployeeSelector.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         attendanceEmployeeSelector.setBackground(Color.WHITE);
         JLabel dateLabel = new JLabel("Date (YYYY-MM-DD):");
@@ -619,6 +800,7 @@ public class MotorPHGUI extends JFrame {
         for (Employee emp : employees) {
             salaryEmployeeSelector.addItem(emp);
         }
+        salaryEmployeeSelector.setRenderer(new EmployeeComboBoxRenderer());
         salaryEmployeeSelector.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         salaryEmployeeSelector.setBackground(Color.WHITE);
         JButton calculateButton = new JButton("Calculate Salary");
